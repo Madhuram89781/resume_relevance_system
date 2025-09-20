@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results - Resume Relevance Check System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Analysis Results</h1>
+            <a href="/" class="btn btn-secondary">← New Analysis</a>
+        </header>
+
+        <!-- Job Summary -->
+        <div class="job-summary">
+            <h3>📋 Job Requirements Summary</h3>
+            <div class="job-info">
+                <div class="job-detail">
+                    <strong>Required Skills:</strong>
+                    {% if results.job_requirements.required_skills %}
+                        <span class="skills-list">
+                            {% for skill in results.job_requirements.required_skills %}
+                                <span class="skill-tag">{{ skill }}</span>
+                            {% endfor %}
+                        </span>
+                    {% else %}
+                        <span class="no-data">Not specified</span>
+                    {% endif %}
+                </div>
+                <div class="job-detail">
+                    <strong>Experience Required:</strong>
+                    <span class="experience-req">
+                        {{ results.job_requirements.experience_required }} years
+                    </span>
+                </div>
+                <div class="job-detail">
+                    <strong>Total Resumes Analyzed:</strong>
+                    <span class="total-count">{{ results.total_resumes }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Overview -->
+        <div class="results-overview">
+            <div class="overview-stats">
+                <div class="stat-card">
+                    <div class="stat-number">{{ results.matches|length }}</div>
+                    <div class="stat-label">Resumes Analyzed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">
+                        {% set strong_matches = results.matches|selectattr('overall_score', '>=', 70)|list %}
+                        {{ strong_matches|length }}
+                    </div>
+                    <div class="stat-label">Strong Matches (70%+)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">
+                        {% if results.matches|length > 0 %}
+                            {% set total_score = results.matches|map(attribute='overall_score')|sum %}
+                            {{ "%.1f"|format(total_score / results.matches|length) }}%
+                        {% else %}
+                            0.0%
+                        {% endif %}
+                    </div>
+                    <div class="stat-label">Average Score</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resume Results -->
+        <div class="results-section">
+            <h3>🏆 Resume Rankings</h3>
+            
+            {% for match in results.matches %}
+            <div class="resume-card" data-score="{{ match.overall_score }}">
+                <div class="resume-header">
+                    <div class="resume-title">
+                        <div class="rank-badge rank-{{ match.rank }}">
+                            #{{ match.rank }}
+                        </div>
+                        <h4>{{ match.filename }}</h4>
+                        <div class="overall-score score-{% if match.overall_score >= 70 %}high{% elif match.overall_score >= 40 %}medium{% else %}low{% endif %}">
+                            {{ "%.1f"|format(match.overall_score) }}%
+                        </div>
+                    </div>
+                </div>
+
+                <div class="resume-content">
+                    <!-- Score Breakdown -->
+                    <div class="score-breakdown">
+                        <div class="score-item">
+                            <span class="score-label">Skills Match:</span>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: {{ match.skill_score }}%"></div>
+                                <span class="score-value">{{ match.skill_score }}%</span>
+                            </div>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">Experience:</span>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: {{ match.experience_score }}%"></div>
+                                <span class="score-value">{{ match.experience_score }}%</span>
+                            </div>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">Keywords:</span>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: {{ match.keyword_score }}%"></div>
+                                <span class="score-value">{{ match.keyword_score }}%</span>
+                            </div>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">Education:</span>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: {{ match.education_score }}%"></div>
+                                <span class="score-value">{{ match.education_score }}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Skills Analysis -->
+                    <div class="skills-analysis">
+                        {% if match.matched_skills %}
+                        <div class="matched-skills">
+                            <strong>✅ Matched Skills:</strong>
+                            {% for skill in match.matched_skills %}
+                                <span class="skill-tag matched">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        {% if match.missing_skills and match.missing_skills|length > 0 %}
+                        <div class="missing-skills">
+                            <strong>❌ Missing Skills:</strong>
+                            {% for skill in match.missing_skills[:5] %}
+                                <span class="skill-tag missing">{{ skill }}</span>
+                            {% endfor %}
+                            {% if match.missing_skills|length > 5 %}
+                                <span class="more-skills">+{{ match.missing_skills|length - 5 }} more</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Candidate Details -->
+                    <div class="candidate-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Experience:</span>
+                            <span class="detail-value">{{ match.resume_data.experience_years }} years</span>
+                        </div>
+                        {% if match.resume_data.email %}
+                        <div class="detail-row">
+                            <span class="detail-label">Email:</span>
+                            <span class="detail-value">{{ match.resume_data.email }}</span>
+                        </div>
+                        {% endif %}
+                        {% if match.resume_data.phone %}
+                        <div class="detail-row">
+                            <span class="detail-label">Phone:</span>
+                            <span class="detail-value">{{ match.resume_data.phone }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Feedback -->
+                    <div class="feedback-section">
+                        <strong>💡 Analysis Feedback:</strong>
+                        <ul class="feedback-list">
+                            {% for feedback_item in match.feedback %}
+                            <li>{{ feedback_item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- Toggle for full resume text -->
+                    <div class="resume-text-section">
+                        <button class="toggle-text-btn" onclick="toggleResumeText('resume-{{ loop.index }}')">
+                            📄 View Full Resume Text
+                        </button>
+                        <div id="resume-{{ loop.index }}" class="resume-full-text" style="display: none;">
+                            <pre>{{ match.resume_data.raw_text[:1000] }}{% if match.resume_data.raw_text and match.resume_data.raw_text|length > 1000 %}...{% endif %}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Export Options -->
+        <div class="export-section">
+            <h3>📤 Export Results</h3>
+            <div class="export-buttons">
+                <button class="btn btn-secondary" onclick="exportToCSV()">
+                    📊 Export to CSV
+                </button>
+                <button class="btn btn-secondary" onclick="printResults()">
+                    🖨️ Print Results
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Resume Relevance Check System. Analysis completed successfully.</p>
+    </footer>
+
+    <script>
+        function toggleResumeText(elementId) {
+            const element = document.getElementById(elementId);
+            const button = element.previousElementSibling;
+            
+            if (element.style.display === 'none') {
+                element.style.display = 'block';
+                button.textContent = '📄 Hide Resume Text';
+            } else {
+                element.style.display = 'none';
+                button.textContent = '📄 View Full Resume Text';
+            }
+        }
+
+        function exportToCSV() {
+            try {
+                // Create CSV content
+                const results = {{ results.matches | tojson | safe }};
+                let csvContent = 'Rank,Filename,Overall Score,Skills Score,Experience Score,Keywords Score,Education Score,Matched Skills,Missing Skills\n';
+                
+                results.forEach(match => {
+                    const matchedSkills = Array.isArray(match.matched_skills) ? match.matched_skills.join(', ') : '';
+                    const missingSkills = Array.isArray(match.missing_skills) ? match.missing_skills.slice(0, 5).join(', ') : '';
+                    
+                    const row = [
+                        match.rank || '',
+                        `"${(match.filename || '').replace(/"/g, '""')}"`,
+                        match.overall_score || 0,
+                        match.skill_score || 0,
+                        match.experience_score || 0,
+                        match.keyword_score || 0,
+                        match.education_score || 0,
+                        `"${matchedSkills.replace(/"/g, '""')}"`,
+                        `"${missingSkills.replace(/"/g, '""')}"`
+                    ].join(',');
+                    csvContent += row + '\n';
+                });
+
+                // Download CSV
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'resume_analysis_results.csv';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Error exporting CSV:', error);
+                alert('Error exporting CSV file. Please try again.');
+            }
+        }
+
+        function printResults() {
+            window.print();
+        }
+
+        // Add sorting functionality
+        function sortResults(criterion) {
+            const resultsSection = document.querySelector('.results-section');
+            const cards = Array.from(document.querySelectorAll('.resume-card'));
+            
+            cards.sort((a, b) => {
+                const scoreA = parseFloat(a.dataset.score);
+                const scoreB = parseFloat(b.dataset.score);
+                return criterion === 'score' ? scoreB - scoreA : scoreA - scoreB;
+            });
+            
+            cards.forEach(card => resultsSection.appendChild(card));
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add animation to cards
+            const cards = document.querySelectorAll('.resume-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('fade-in');
+            });
+        });
+    </script>
+    
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</body>
+</html>

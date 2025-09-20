@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Relevance Check System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 Resume Relevance Check System</h1>
+            <p>Upload resumes and job description to find the best matches</p>
+        </header>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                            <button type="button" class="close" onclick="this.parentElement.style.display='none'">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="upload-section">
+            <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+                <!-- Job Description Section -->
+                <div class="form-group">
+                    <label for="job_description">
+                        <h3>📋 Job Description</h3>
+                        <span class="required">*Required</span>
+                    </label>
+                    <textarea 
+                        id="job_description" 
+                        name="job_description" 
+                        placeholder="Paste the job description here. Include required skills, experience level, education requirements, etc."
+                        rows="8"
+                        required
+                    ></textarea>
+                    <small>Provide detailed job requirements for better matching accuracy</small>
+                </div>
+
+                <!-- Resume Upload Section -->
+                <div class="form-group">
+                    <label for="resumes">
+                        <h3>📄 Upload Resumes</h3>
+                        <span class="required">*Required</span>
+                    </label>
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <div class="upload-prompt">
+                            <div class="upload-icon">📁</div>
+                            <p>Click to select resume files or drag & drop here</p>
+                            <small>Supported formats: PDF, DOCX, TXT (Max 16MB each)</small>
+                        </div>
+                        <input 
+                            type="file" 
+                            id="resumes" 
+                            name="resumes" 
+                            multiple 
+                            accept=".pdf,.docx,.txt"
+                            required
+                        >
+                    </div>
+                    <div id="fileList" class="file-list"></div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <span id="submitText">🚀 Analyze Resumes</span>
+                        <div id="loadingSpinner" class="loading-spinner" style="display: none;"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Instructions Section -->
+        <div class="instructions">
+            <h3>📖 How to Use</h3>
+            <div class="instruction-grid">
+                <div class="instruction-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Enter Job Description</h4>
+                        <p>Paste the complete job description including required skills, experience, and qualifications</p>
+                    </div>
+                </div>
+                <div class="instruction-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Upload Resumes</h4>
+                        <p>Select multiple resume files (PDF, DOCX, or TXT format) to compare against the job</p>
+                    </div>
+                </div>
+                <div class="instruction-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Get Results</h4>
+                        <p>View ranked results with detailed analysis and matching scores for each resume</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="features">
+            <h3>✨ Features</h3>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">🎯</div>
+                    <h4>Smart Matching</h4>
+                    <p>Advanced algorithms analyze skills, experience, and keywords</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📊</div>
+                    <h4>Detailed Scoring</h4>
+                    <p>Get breakdown of skill match, experience fit, and overall relevance</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <h4>Fast Processing</h4>
+                    <p>Process multiple resumes quickly with instant results</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🔒</div>
+                    <h4>Secure</h4>
+                    <p>Files are processed locally and automatically deleted after analysis</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Resume Relevance Check System. Built with Flask & Python.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
