@@ -11,7 +11,7 @@ app.secret_key = 'your_secret_key_here'  # Change this to a random secret key
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Configuration
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', '/tmp/uploads')
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt'}
 
 # Create upload folder if it doesn't exist
@@ -140,8 +140,21 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 # For Vercel deployment
-# Create necessary directories
-os.makedirs('utils', exist_ok=True)
-os.makedirs('templates', exist_ok=True)
-os.makedirs('static', exist_ok=True)
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+try:
+    # Create necessary directories
+    os.makedirs('utils', exist_ok=True)
+    os.makedirs('templates', exist_ok=True)
+    os.makedirs('static', exist_ok=True)
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+    # Create empty __init__.py file in utils directory
+    init_file = os.path.join('utils', '__init__.py')
+    if not os.path.exists(init_file):
+        with open(init_file, 'w') as f:
+            pass
+except Exception:
+    # In serverless environment, some operations might fail
+    pass
+
+# Export the app for Vercel
+app = app
